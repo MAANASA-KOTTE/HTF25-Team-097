@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Outfit Planner - Style for Every Generation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --glass-bg: rgba(255, 255, 255, 0.25);
+      --glass-border: rgba(255, 255, 255, 0.18);
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    .glass-card { 
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .glass-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .btn-primary { 
+      background: var(--primary-gradient);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 15px;
+      border: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+    
+    .btn-secondary { 
+      background: var(--secondary-gradient);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 15px;
+      border: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+    }
+    
+    .btn-danger { 
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+    }
+    
+    .floating-action {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .floating-action:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 35px rgba(79, 172, 254, 0.6);
+    }
+    
+    .outfit-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .outfit-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .outfit-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      transition: all 0.3s ease;
+    }
+    
+    .outfit-card:hover img {
+      transform: scale(1.05);
+    }
+    
+    .score-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent-gradient);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .favorite-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .favorite-btn:hover {
+      background: #ff6b6b;
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .favorite-btn.active {
+      background: #ff6b6b;
+      color: white;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .style-chip {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin: 0.125rem;
+    }
+    
+    .occasion-chip {
+      display: inline-block;
+      background: var(--secondary-gradient);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin: 0.125rem;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal-content {
+      background: white;
+      margin: 5% auto;
+      padding: 2rem;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    .close {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .close:hover {
+      color: #000;
+    }
+    
+    .tab-container {
+      display: flex;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 0.25rem;
+      margin-bottom: 1rem;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+    }
+    
+    .tab.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-chip {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.875rem;
+    }
+    
+    .filter-chip.active {
+      background: white;
+      color: #667eea;
+    }
+    
+    .filter-chip:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .filter-chip.active:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+      .glass-card {
+        padding: 1rem;
+        margin: 0.5rem;
+      }
+      
+      .floating-action {
+        bottom: 15px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+      }
+      
+      .modal-content {
+        margin: 10% auto;
+        padding: 1.5rem;
+        width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="glass-card mx-4 mt-4 mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-white mb-2">
+          <i class="fas fa-tshirt mr-3"></i>AI Outfit Planner
+        </h1>
+        <p class="text-white/80 text-sm">Style for Every Generation • Personalized Fashion Assistant</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="reset-btn" class="btn-danger">
+          <i class="fas fa-trash mr-2"></i>Reset
+        </button>
+      </div>
+    </div>
+    </header>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto px-4 pb-20">
+    
+    <!-- Tab Navigation -->
+    <div class="glass-card mb-6">
+      <div class="tab-container">
+        <div class="tab active" data-tab="upload">
+          <i class="fas fa-upload mr-2"></i>Upload
+        </div>
+        <div class="tab" data-tab="generate">
+          <i class="fas fa-magic mr-2"></i>Generate
+        </div>
+        <div class="tab" data-tab="gallery">
+          <i class="fas fa-images mr-2"></i>Gallery
+        </div>
+        <div class="tab" data-tab="favorites">
+          <i class="fas fa-heart mr-2"></i>Favorites
+        </div>
+        <div class="tab" data-tab="calendar">
+          <i class="fas fa-calendar mr-2"></i>Calendar
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Tab -->
+    <div id="upload-tab" class="tab-content active">
+      <div class="glass-card slide-in">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-white mb-2">
+            <i class="fas fa-cloud-upload-alt mr-3"></i>Upload Your Outfits
+          </h2>
+          <p class="text-white/80">Add photos of your favorite outfits to build your digital wardrobe</p>
+        </div>
+        
+        <div class="bg-white/10 rounded-2xl p-6 mb-4">
+          <div class="border-2 border-dashed border-white/30 rounded-xl p-8 text-center hover:border-white/50 transition-all duration-300">
+            <i class="fas fa-camera text-4xl text-white/60 mb-4"></i>
+            <h3 class="text-lg font-semibold text-white mb-2">Drop your outfit photos here</h3>
+            <p class="text-white/70 mb-4">Supports JPG, PNG formats</p>
+            <input type="file" id="file-input" accept="image/*" class="hidden" multiple />
+            <button id="select-files-btn" class="btn-primary">
+              <i class="fas fa-plus mr-2"></i>Choose Files
+            </button>
+          </div>
+        </div>
+        
+        <div id="preview-container" class="hidden mb-4">
+          <h3 class="text-lg font-semibold text-white mb-3">Preview</h3>
+          <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </div>
+        
+        <button id="upload-btn" class="btn-primary w-full mb-4">
+          <i class="fas fa-upload mr-2"></i>Upload Outfits
+        </button>
+        
+        <div id="upload-status" class="text-center text-white/80"></div>
+      </div>
+    </div>
+
+    <!-- Generate Tab -->
+    <div id="generate-tab" class="tab-content">
+      <div class="glass-card slide-in">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-white mb-2">
+            <i class="fas fa-magic mr-3"></i>AI Outfit Generator
+          </h2>
+          <p class="text-white/80">Get personalized outfit recommendations based on your style and occasion</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white/10 rounded-xl p-4">
+            <label class="block text-white font-semibold mb-3">
+              <i class="fas fa-calendar-check mr-2"></i>Occasion
+            </label>
+            <select id="occasion" class="w-full bg-white/20 text-white border border-white/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/50">
+            <option value="">-- Select Occasion --</option>
+              <option value="office">💼 Office</option>
+              <option value="wedding">💒 Wedding</option>
+              <option value="casual">👕 Casual</option>
+              <option value="beach">🏖️ Beach</option>
+          </select>
+        </div>
+          
+          <div class="bg-white/10 rounded-xl p-4">
+            <label class="block text-white font-semibold mb-3">
+              <i class="fas fa-palette mr-2"></i>Style Preference
+            </label>
+            <select id="style" class="w-full bg-white/20 text-white border border-white/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/50">
+            <option value="">-- Select Style --</option>
+              <option value="genz">✨ Gen Z (Trendy & Bold)</option>
+              <option value="genx">🎯 Gen X (Balanced & Mature)</option>
+              <option value="classic">👑 Classic (Timeless & Elegant)</option>
+          </select>
+          </div>
+        </div>
+        
+        <button id="generate-btn" class="btn-primary w-full mb-4">
+          <i class="fas fa-wand-magic-sparkles mr-2"></i>Generate Perfect Outfit
+        </button>
+        
+        <div id="generate-status" class="text-center text-white/80 mb-6"></div>
+        
+        <!-- Best Outfit Display -->
+        <div id="best-outfit-container" class="hidden">
+          <div class="bg-white/10 rounded-xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4 text-center">
+              <i class="fas fa-crown mr-2"></i>Your Perfect Outfit
+            </h3>
+            <div id="best-outfit" class="text-center"></div>
+          </div>
+        </div>
+        
+        <!-- Alternative Suggestions -->
+        <div id="alternatives-container" class="hidden mt-6">
+          <h3 class="text-xl font-bold text-white mb-4 text-center">
+            <i class="fas fa-lightbulb mr-2"></i>Alternative Suggestions
+          </h3>
+          <div id="alternatives-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery Tab -->
+    <div id="gallery-tab" class="tab-content">
+      <div class="glass-card slide-in">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white">
+            <i class="fas fa-images mr-3"></i>My Outfit Collection
+          </h2>
+        </div>
+        
+        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        <div id="empty-msg" class="text-center text-white/60 py-12">
+          <i class="fas fa-tshirt text-6xl mb-4"></i>
+          <p class="text-lg">No outfits uploaded yet</p>
+          <p class="text-sm">Start building your digital wardrobe!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favorites Tab -->
+    <div id="favorites-tab" class="tab-content">
+      <div class="glass-card slide-in">
+        <h2 class="text-2xl font-bold text-white mb-6">
+          <i class="fas fa-heart mr-3"></i>Favorite Outfits
+        </h2>
+        <div id="favorites-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        <div id="no-favorites-msg" class="text-center text-white/60 py-12">
+          <i class="fas fa-heart-broken text-6xl mb-4"></i>
+          <p class="text-lg">No favorites yet</p>
+          <p class="text-sm">Heart outfits you love to save them here!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Tab -->
+    <div id="calendar-tab" class="tab-content">
+      <div class="glass-card slide-in">
+        <h2 class="text-2xl font-bold text-white mb-6">
+          <i class="fas fa-calendar mr-3"></i>Outfit Calendar
+        </h2>
+        <div class="bg-white/10 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-4">Plan Your Outfits</h3>
+          <div class="grid grid-cols-7 gap-2 mb-4">
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Sun</div>
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Mon</div>
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Tue</div>
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Wed</div>
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Thu</div>
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Fri</div>
+            <div class="text-center text-white/70 text-sm font-semibold py-2">Sat</div>
+          </div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+            <!-- Calendar days will be generated here -->
+          </div>
+        </div>
+        <div id="calendar-empty-msg" class="text-center text-white/60 py-8">
+          <i class="fas fa-calendar-plus text-4xl mb-4"></i>
+          <p class="text-lg">Plan your outfits ahead of time</p>
+          <p class="text-sm">Click on any day to assign an outfit!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Action Button -->
+  <button id="quick-upload-btn" class="floating-action">
+    <i class="fas fa-plus"></i>
+  </button>
+
+  <!-- Outfit Details Modal -->
+  <div id="outfit-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global state management
+    const state = {
+      outfits: [],
+      favorites: JSON.parse(localStorage.getItem('favorites') || '[]'),
+      calendar: JSON.parse(localStorage.getItem('calendar') || '{}'),
+      selectedFiles: []
+    };
+
+    // DOM elements
+    const elements = {
+      fileInput: document.getElementById('file-input'),
+      selectFilesBtn: document.getElementById('select-files-btn'),
+      previewContainer: document.getElementById('preview-container'),
+      previewGrid: document.getElementById('preview-grid'),
+      uploadBtn: document.getElementById('upload-btn'),
+      uploadStatus: document.getElementById('upload-status'),
+      generateBtn: document.getElementById('generate-btn'),
+      generateStatus: document.getElementById('generate-status'),
+      occasion: document.getElementById('occasion'),
+      style: document.getElementById('style'),
+      bestOutfitContainer: document.getElementById('best-outfit-container'),
+      bestOutfit: document.getElementById('best-outfit'),
+      alternativesContainer: document.getElementById('alternatives-container'),
+      alternativesGrid: document.getElementById('alternatives-grid'),
+      gallery: document.getElementById('gallery'),
+      emptyMsg: document.getElementById('empty-msg'),
+      favoritesGallery: document.getElementById('favorites-gallery'),
+      noFavoritesMsg: document.getElementById('no-favorites-msg'),
+      resetBtn: document.getElementById('reset-btn'),
+      quickUploadBtn: document.getElementById('quick-upload-btn'),
+      outfitModal: document.getElementById('outfit-modal'),
+      tabs: document.querySelectorAll('.tab'),
+      tabContents: document.querySelectorAll('.tab-content')
+    };
+
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeApp();
+      setupEventListeners();
+      loadGallery();
+      loadFavorites();
+      generateCalendar();
+    });
+
+    function initializeApp() {
+      // Add slide-in animation to all cards
+      document.querySelectorAll('.glass-card').forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('slide-in');
+      });
+    }
+
+    function setupEventListeners() {
+      // File handling
+      elements.selectFilesBtn.addEventListener('click', () => elements.fileInput.click());
+      elements.fileInput.addEventListener('change', handleFileSelection);
+      elements.uploadBtn.addEventListener('click', uploadFiles);
+      elements.quickUploadBtn.addEventListener('click', () => elements.fileInput.click());
+
+      // Generate outfit
+      elements.generateBtn.addEventListener('click', generateOutfit);
+
+      // Tab navigation
+      elements.tabs.forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+      });
+
+      // Reset button
+      elements.resetBtn.addEventListener('click', resetAll);
+
+      // Close modals
+      document.querySelectorAll('.close').forEach(closeBtn => {
+        closeBtn.addEventListener('click', closeModals);
+      });
+
+      // Click outside modal to close
+      window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+          closeModals();
+        }
+      });
+
+      // Drag and drop
+      setupDragAndDrop();
+    }
+
+    function handleFileSelection(e) {
+      const files = Array.from(e.target.files);
+      elements.selectedFiles = files;
+      showPreview(files);
+    }
+
+    function showPreview(files) {
+      elements.previewGrid.innerHTML = '';
+      elements.previewContainer.classList.remove('hidden');
+
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const previewItem = document.createElement('div');
+          previewItem.className = 'relative group';
+          previewItem.innerHTML = `
+            <img src="${e.target.result}" class="w-full h-32 object-cover rounded-lg">
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+              <button onclick="removePreview(${index})" class="btn-danger">
+                <i class="fas fa-trash mr-2"></i>Remove
+              </button>
+            </div>
+            <div class="absolute top-2 right-2 bg-white/90 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+              ${index + 1}
+            </div>
+          `;
+          elements.previewGrid.appendChild(previewItem);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removePreview(index) {
+      elements.selectedFiles.splice(index, 1);
+      showPreview(elements.selectedFiles);
+      if (elements.selectedFiles.length === 0) {
+        elements.previewContainer.classList.add('hidden');
+      }
+    }
+
+    async function uploadFiles() {
+      if (elements.selectedFiles.length === 0) {
+        showStatus('upload-status', 'Please select files to upload', 'error');
+        return;
+      }
+
+      showStatus('upload-status', 'Uploading...', 'loading');
+      elements.uploadBtn.disabled = true;
+
+      try {
+        const uploadPromises = elements.selectedFiles.map(file => uploadSingleFile(file));
+        await Promise.all(uploadPromises);
+        
+        showStatus('upload-status', `✅ Successfully uploaded ${elements.selectedFiles.length} outfit(s)!`, 'success');
+        elements.selectedFiles = [];
+        elements.previewContainer.classList.add('hidden');
+        elements.fileInput.value = '';
+      loadGallery();
+      } catch (error) {
+        console.error('Upload failed:', error);
+        let errorMessage = error.message;
+        
+        // Handle specific error cases
+        if (errorMessage.includes('Unexpected token')) {
+          errorMessage = 'Server returned invalid response. Please try again.';
+        } else if (errorMessage.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection.';
+        }
+        
+        showStatus('upload-status', `❌ Upload failed: ${errorMessage}`, 'error');
+      } finally {
+        elements.uploadBtn.disabled = false;
+      }
+    }
+
+    async function uploadSingleFile(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          // Try to parse error response as JSON, fallback to text
+          let errorMessage = 'Upload failed';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          }
+          throw new Error(errorMessage);
+        }
+
+        // Parse successful response
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+    }
+
+    async function generateOutfit() {
+      const occasion = elements.occasion.value;
+      const style = elements.style.value;
+
+      if (!occasion || !style) {
+        showStatus('generate-status', 'Please select both occasion and style', 'error');
+        return;
+      }
+
+      showStatus('generate-status', 'Analyzing your outfits...', 'loading');
+      elements.generateBtn.disabled = true;
+
+      try {
+        const response = await fetch('/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ occasion, style })
+      });
+
+        const data = await response.json();
+        
+      if (data.error) {
+          showStatus('generate-status', data.error, 'error');
+          return;
+        }
+
+        showStatus('generate-status', '✅ Perfect outfit found!', 'success');
+        displayBestOutfit(data.best);
+        displayAlternatives(data.outfits.slice(1, 4)); // Show top 3 alternatives
+        
+        // Switch to gallery tab to see results
+        switchTab('gallery');
+      } catch (error) {
+        showStatus('generate-status', `❌ Generation failed: ${error.message}`, 'error');
+      } finally {
+        elements.generateBtn.disabled = false;
+      }
+    }
+
+    function displayBestOutfit(outfit) {
+      if (!outfit) return;
+
+      elements.bestOutfit.innerHTML = `
+        <div class="bg-white/10 rounded-xl p-4">
+          <img src="${outfit.url}" class="w-full max-w-sm mx-auto h-64 object-cover rounded-lg mb-4">
+          <div class="space-y-2">
+            <h4 class="text-lg font-semibold text-white">${outfit.filename}</h4>
+            <div class="flex justify-center gap-2">
+              <span class="occasion-chip">${outfit.occasion}</span>
+              <span class="style-chip">${outfit.style}</span>
+            </div>
+            <div class="flex items-center justify-center gap-2 text-white/80">
+              <i class="fas fa-star"></i>
+              <span>Score: ${(outfit.score * 100).toFixed(1)}%</span>
+            </div>
+            <div class="flex justify-center gap-2 mt-4">
+              <button onclick="addToFavorites('${outfit.filename}')" class="btn-secondary">
+                <i class="fas fa-heart mr-2"></i>Save to Favorites
+              </button>
+              <button onclick="showOutfitDetails('${outfit.filename}')" class="btn-primary">
+                <i class="fas fa-info-circle mr-2"></i>Details
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      elements.bestOutfitContainer.classList.remove('hidden');
+    }
+
+    function displayAlternatives(outfits) {
+      if (!outfits || outfits.length === 0) return;
+
+      elements.alternativesGrid.innerHTML = '';
+      outfits.forEach(outfit => {
+        const altCard = document.createElement('div');
+        altCard.className = 'outfit-card';
+        altCard.innerHTML = `
+          <img src="${outfit.url}" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h4 class="font-semibold text-gray-800 mb-2">${outfit.filename}</h4>
+            <div class="flex gap-1 mb-2">
+              <span class="occasion-chip">${outfit.occasion}</span>
+              <span class="style-chip">${outfit.style}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Score: ${(outfit.score * 100).toFixed(1)}%</span>
+              <button onclick="addToFavorites('${outfit.filename}')" class="favorite-btn">
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        elements.alternativesGrid.appendChild(altCard);
+      });
+      elements.alternativesContainer.classList.remove('hidden');
+    }
+
+    async function loadGallery() {
+      try {
+        const response = await fetch('/gallery');
+        const data = await response.json();
+        state.outfits = data.outfits || [];
+        renderGallery();
+      } catch (error) {
+        console.error('Failed to load gallery:', error);
+      }
+    }
+
+    function renderGallery() {
+      elements.gallery.innerHTML = '';
+      
+      if (state.outfits.length === 0) {
+        elements.emptyMsg.style.display = 'block';
+        return;
+      }
+
+      elements.emptyMsg.style.display = 'none';
+      
+      state.outfits.forEach(outfit => {
+        const outfitCard = createOutfitCard(outfit);
+        elements.gallery.appendChild(outfitCard);
+      });
+    }
+
+    function createOutfitCard(outfit) {
+      const card = document.createElement('div');
+      card.className = 'outfit-card';
+      
+      const isFavorite = state.favorites.includes(outfit.filename);
+      
+      card.innerHTML = `
+        <img src="${outfit.url}" class="w-full h-48 object-cover" onclick="showOutfitDetails('${outfit.filename}')">
+        <div class="p-4">
+          <h4 class="font-semibold text-gray-800 mb-2 truncate">${outfit.filename}</h4>
+          <div class="flex gap-1 mb-2">
+            ${outfit.occasion ? `<span class="occasion-chip">${outfit.occasion}</span>` : ''}
+            ${outfit.style ? `<span class="style-chip">${outfit.style}</span>` : ''}
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500">${outfit.timestamp}</span>
+            <div class="flex gap-1">
+              ${outfit.score ? `<span class="score-badge">${(outfit.score * 100).toFixed(0)}%</span>` : ''}
+              <button onclick="toggleFavorite('${outfit.filename}')" class="favorite-btn ${isFavorite ? 'active' : ''}">
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return card;
+    }
+
+
+    function loadFavorites() {
+      elements.favoritesGallery.innerHTML = '';
+      
+      if (state.favorites.length === 0) {
+        elements.noFavoritesMsg.style.display = 'block';
+        return;
+      }
+
+      elements.noFavoritesMsg.style.display = 'none';
+      
+      const favoriteOutfits = state.outfits.filter(outfit => 
+        state.favorites.includes(outfit.filename)
+      );
+
+      favoriteOutfits.forEach(outfit => {
+        const favoriteCard = createOutfitCard(outfit);
+        elements.favoritesGallery.appendChild(favoriteCard);
+      });
+    }
+
+    function toggleFavorite(filename) {
+      const index = state.favorites.indexOf(filename);
+      if (index > -1) {
+        state.favorites.splice(index, 1);
+      } else {
+        state.favorites.push(filename);
+      }
+      
+      localStorage.setItem('favorites', JSON.stringify(state.favorites));
+      loadFavorites();
+      renderGallery(); // Update heart icons in gallery
+    }
+
+    function addToFavorites(filename) {
+      if (!state.favorites.includes(filename)) {
+        state.favorites.push(filename);
+        localStorage.setItem('favorites', JSON.stringify(state.favorites));
+        loadFavorites();
+        renderGallery();
+        showToast('Added to favorites!', 'success');
+      }
+    }
+
+    function generateCalendar() {
+      const calendarGrid = document.getElementById('calendar-grid');
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      
+      // Get first day of month and number of days
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      calendarGrid.innerHTML = '';
+      
+      // Add empty cells for days before month starts
+      for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'h-16';
+        calendarGrid.appendChild(emptyCell);
+      }
+      
+      // Add days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'h-16 border border-white/20 rounded-lg p-2 cursor-pointer hover:bg-white/10 transition-colors';
+        dayCell.innerHTML = `
+          <div class="text-white font-semibold text-sm">${day}</div>
+          <div class="text-xs text-white/60">${getOutfitForDay(day)}</div>
+        `;
+        
+        dayCell.addEventListener('click', () => showOutfitSelector(day));
+        calendarGrid.appendChild(dayCell);
+      }
+    }
+
+    function getOutfitForDay(day) {
+      const key = `${new Date().getFullYear()}-${new Date().getMonth()}-${day}`;
+      return state.calendar[key] || '';
+    }
+
+    function showOutfitSelector(day) {
+      if (state.outfits.length === 0) {
+        showToast('Upload some outfits first!', 'error');
+        return;
+      }
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h3 class="text-xl font-bold mb-4">Select Outfit for Day ${day}</h3>
+          <div class="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            ${state.outfits.map(outfit => `
+              <div class="outfit-card cursor-pointer" onclick="assignOutfitToDay(${day}, '${outfit.filename}')">
+                <img src="${outfit.url}" class="w-full h-32 object-cover">
+                <div class="p-2">
+                  <p class="text-sm font-semibold truncate">${outfit.filename}</p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      modal.style.display = 'block';
+      
+      modal.querySelector('.close').addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+    }
+
+    function assignOutfitToDay(day, filename) {
+      const key = `${new Date().getFullYear()}-${new Date().getMonth()}-${day}`;
+      state.calendar[key] = filename;
+      localStorage.setItem('calendar', JSON.stringify(state.calendar));
+      generateCalendar();
+      closeModals();
+      showToast('Outfit assigned!', 'success');
+    }
+
+    function switchTab(tabName) {
+      // Update tab buttons
+      elements.tabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+      });
+      
+      // Update tab content
+      elements.tabContents.forEach(content => {
+        content.classList.toggle('active', content.id === `${tabName}-tab`);
+      });
+      
+      // Load content for specific tabs
+      if (tabName === 'gallery') {
+      loadGallery();
+      } else if (tabName === 'favorites') {
+        loadFavorites();
+      }
+    }
+
+
+    function showOutfitDetails(filename) {
+      const outfit = state.outfits.find(o => o.filename === filename);
+      if (!outfit) return;
+
+      const modalContent = document.getElementById('modal-content');
+      modalContent.innerHTML = `
+        <div class="text-center">
+          <img src="${outfit.url}" class="w-full max-w-md mx-auto h-64 object-cover rounded-lg mb-4">
+          <h3 class="text-xl font-bold mb-4">${outfit.filename}</h3>
+          <div class="space-y-3">
+            <div class="flex justify-center gap-2">
+              ${outfit.occasion ? `<span class="occasion-chip">${outfit.occasion}</span>` : ''}
+              ${outfit.style ? `<span class="style-chip">${outfit.style}</span>` : ''}
+            </div>
+            ${outfit.score ? `<div class="text-lg"><strong>AI Score:</strong> ${(outfit.score * 100).toFixed(1)}%</div>` : ''}
+            <div class="text-gray-600">Uploaded: ${outfit.timestamp}</div>
+            <div class="flex justify-center gap-2 mt-4">
+              <button onclick="toggleFavorite('${outfit.filename}')" class="btn-secondary">
+                <i class="fas fa-heart mr-2"></i>${state.favorites.includes(outfit.filename) ? 'Remove from' : 'Add to'} Favorites
+              </button>
+              <button onclick="assignOutfitToDay(${new Date().getDate()}, '${outfit.filename}')" class="btn-primary">
+                <i class="fas fa-calendar mr-2"></i>Plan for Today
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      showModal('outfit-modal');
+    }
+
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+      });
+    }
+
+    async function resetAll() {
+      if (!confirm('Are you sure you want to delete all outfits? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+      await fetch('/reset', { method: 'POST' });
+        state.outfits = [];
+        state.favorites = [];
+        state.calendar = {};
+        localStorage.removeItem('favorites');
+        localStorage.removeItem('calendar');
+        
+        loadGallery();
+        loadFavorites();
+        generateCalendar();
+        
+        showToast('All outfits cleared!', 'success');
+      } catch (error) {
+        showToast('Failed to reset outfits', 'error');
+      }
+    }
+
+    function setupDragAndDrop() {
+      const dropZone = document.querySelector('.border-dashed');
+      
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight(e) {
+        dropZone.classList.add('border-white/50', 'bg-white/10');
+      }
+
+      function unhighlight(e) {
+        dropZone.classList.remove('border-white/50', 'bg-white/10');
+      }
+
+      dropZone.addEventListener('drop', handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        elements.selectedFiles = Array.from(files);
+        showPreview(elements.selectedFiles);
+      }
+    }
+
+    function showStatus(elementId, message, type) {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.className = `text-center text-white/80 ${type === 'error' ? 'text-red-300' : type === 'success' ? 'text-green-300' : ''}`;
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-semibold ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+      }`;
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+
+    // Global functions for onclick handlers
+    window.removePreview = removePreview;
+    window.toggleFavorite = toggleFavorite;
+    window.addToFavorites = addToFavorites;
+    window.showOutfitDetails = showOutfitDetails;
+    window.assignOutfitToDay = assignOutfitToDay;
+  </script>
+</body>
+</html>
