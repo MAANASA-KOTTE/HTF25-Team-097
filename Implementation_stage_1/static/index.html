@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Outfit Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #f8f7ff; font-family: Inter, sans-serif; }
+    .card { background: white; border-radius: 0.75rem; box-shadow: 0 6px 18px rgba(0,0,0,0.06); padding: 1rem; }
+    .btn { background: #5c52c2; color: white; padding: 0.6rem 1rem; border-radius: 0.5rem; }
+    .btn-danger { background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+  </style>
+</head>
+<body class="p-6">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <header class="flex justify-between items-center">
+      <h1 class="text-2xl font-extrabold text-gray-900">AI Outfit Planner</h1>
+      <button id="reset-btn" class="btn-danger">Reset All</button>
+    </header>
+
+    <!-- Upload -->
+    <section class="card">
+      <h2 class="font-semibold mb-3 text-lg">Upload Outfit (Image Only)</h2>
+      <input type="file" id="file-input" accept="image/*" class="mb-3 w-full border rounded px-2 py-1" />
+      <div id="preview" class="hidden mb-3">
+        <p class="text-sm text-gray-600 mb-1">Preview:</p>
+        <img id="preview-img" class="w-full rounded" style="max-height:300px;object-fit:cover;">
+      </div>
+      <button id="upload-btn" class="btn w-full">Upload</button>
+      <p id="upload-status" class="mt-2 text-sm text-gray-600"></p>
+    </section>
+
+    <!-- Generate -->
+    <section class="card">
+      <h2 class="font-semibold mb-3 text-lg">Generate Best Outfit</h2>
+      <div class="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          <label class="font-semibold text-sm">Occasion</label>
+          <select id="occasion" class="w-full border rounded px-2 py-1">
+            <option value="">-- Select Occasion --</option>
+            <option value="office">Office</option>
+            <option value="wedding">Wedding</option>
+            <option value="casual">Casual</option>
+            <option value="beach">Beach</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold text-sm">Style</label>
+          <select id="style" class="w-full border rounded px-2 py-1">
+            <option value="">-- Select Style --</option>
+            <option value="genz">Gen Z</option>
+            <option value="genx">Gen X</option>
+            <option value="classic">Classic</option>
+          </select>
+        </div>
+      </div>
+      <button id="generate-btn" class="btn w-full">Generate Outfit</button>
+      <p id="generate-status" class="mt-2 text-sm text-gray-600"></p>
+    </section>
+
+    <!-- Best Outfit -->
+    <section class="card">
+      <h2 class="font-semibold mb-3 text-lg">Best Outfit</h2>
+      <div id="best" class="text-center text-gray-500">No evaluation yet.</div>
+    </section>
+
+    <!-- Gallery -->
+    <section>
+      <h2 class="font-semibold mb-3 text-lg">My Outfits</h2>
+      <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+      <p id="empty-msg" class="text-sm text-gray-500 mt-2">No outfits uploaded yet.</p>
+    </section>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('preview-img');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadStatus = document.getElementById('upload-status');
+    const generateBtn = document.getElementById('generate-btn');
+    const generateStatus = document.getElementById('generate-status');
+    const gallery = document.getElementById('gallery');
+    const emptyMsg = document.getElementById('empty-msg');
+    const bestDiv = document.getElementById('best');
+    const resetBtn = document.getElementById('reset-btn');
+
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', e => {
+      selectedFile = e.target.files[0];
+      if (!selectedFile) return;
+      const url = URL.createObjectURL(selectedFile);
+      previewImg.src = url;
+      preview.classList.remove('hidden');
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!selectedFile) {
+        uploadStatus.textContent = "Please choose an image.";
+        return;
+      }
+      const fd = new FormData();
+      fd.append('image', selectedFile);
+      uploadStatus.textContent = "Uploading...";
+      const res = await fetch('/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) uploadStatus.textContent = "Error: " + data.error;
+      else uploadStatus.textContent = "✅ Uploaded successfully!";
+      preview.classList.add('hidden');
+      fileInput.value = '';
+      selectedFile = null;
+      loadGallery();
+    });
+
+    async function loadGallery() {
+      const res = await fetch('/gallery');
+      const data = await res.json();
+      const outfits = data.outfits || [];
+      gallery.innerHTML = '';
+      if (!outfits.length) { emptyMsg.style.display = 'block'; return; }
+      emptyMsg.style.display = 'none';
+      outfits.forEach(o => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <img src="${o.url}" class="w-full h-48 object-cover rounded mb-2">
+          <div class="text-sm text-gray-700">${o.filename}</div>
+          <div class="text-xs text-gray-500">${o.timestamp}</div>`;
+        gallery.appendChild(div);
+      });
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      const occasion = document.getElementById('occasion').value;
+      const style = document.getElementById('style').value;
+      if (!occasion || !style) {
+        generateStatus.textContent = "Please select occasion and style.";
+        return;
+      }
+      generateStatus.textContent = "Analyzing...";
+      const res = await fetch('/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ occasion, style })
+      });
+      const data = await res.json();
+      if (data.error) {
+        generateStatus.textContent = data.error;
+        return;
+      }
+      generateStatus.textContent = "✅ Generated best outfit!";
+      const best = data.best;
+      bestDiv.innerHTML = `
+        <img src="${best.url}" class="mx-auto w-48 h-48 object-cover rounded mb-3">
+        <p><b>${best.filename}</b></p>
+        <p>Occasion: ${best.occasion}</p>
+        <p>Style: ${best.style}</p>
+        <p>Score: ${best.score}</p>`;
+      loadGallery();
+    });
+
+    resetBtn.addEventListener('click', async () => {
+      if (!confirm("Delete all outfits?")) return;
+      await fetch('/reset', { method: 'POST' });
+      gallery.innerHTML = '';
+      bestDiv.textContent = 'No evaluation yet.';
+      uploadStatus.textContent = '';
+      generateStatus.textContent = '';
+      emptyMsg.style.display = 'block';
+    });
+
+    loadGallery();
+  </script>
+</body>
+</html>
